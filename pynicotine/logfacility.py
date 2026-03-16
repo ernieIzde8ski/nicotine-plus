@@ -7,6 +7,7 @@ import sys
 import time
 
 from collections import deque
+from enum import Enum
 
 from pynicotine.config import config
 from pynicotine.events import events
@@ -28,7 +29,8 @@ class LogFile:
         self.last_active = time.monotonic()
 
 
-class LogLevel:
+# TODO: Does this have the same performance as not using Enum?
+class LogLevel(Enum):
     DEFAULT = "default"
     DOWNLOAD = "download"
     UPLOAD = "upload"
