@@ -220,17 +220,17 @@ class Events:
     __slots__ = ("_callbacks", "_thread_events", "_pending_scheduler_events", "_scheduler_events",
                  "_scheduler_event_id", "_scheduler_thread", "_is_active")
 
-    SCHEDULER_MAX_IDLE = 0.2
+    SCHEDULER_MAX_IDLE: float = 0.2
 
     def __init__(self):
 
-        self._callbacks = defaultdict(list)
-        self._thread_events = SimpleQueue()
-        self._pending_scheduler_events = SimpleQueue()
-        self._scheduler_events = {}
-        self._scheduler_event_id = 0
-        self._scheduler_thread = None
-        self._is_active = False
+        self._callbacks: defaultdict[str, list] = defaultdict(list)
+        self._thread_events: SimpleQueue = SimpleQueue()
+        self._pending_scheduler_events: SimpleQueue = SimpleQueue()
+        self._scheduler_events: dict = {}
+        self._scheduler_event_id: int = 0
+        self._scheduler_thread: None = None
+        self._is_active: bool = False
 
     def enable(self):
 
