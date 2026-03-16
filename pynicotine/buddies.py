@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2021-2025 Nicotine+ Contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from dataclasses import dataclass
 import time
+from typing import Any
 
 from pynicotine.config import config
 from pynicotine.core import core
@@ -10,22 +12,18 @@ from pynicotine.logfacility import log
 from pynicotine.slskmessages import UserStatus
 
 
+@dataclass
 class Buddy:
     __slots__ = ("username", "note", "notify_status", "is_prioritized", "is_trusted", "last_seen",
                  "country", "status")
-
-    def __init__(self, username, note, notify_status, is_prioritized, is_trusted, last_seen,
-                 country, status):
-
-        self.username = username
-        self.note = note
-        self.notify_status = notify_status
-        self.is_prioritized = is_prioritized
-        self.is_trusted = is_trusted
-        self.last_seen = last_seen
-        self.country = country
-        self.status = status
-
+    username: Any
+    note: Any
+    notify_status: Any
+    is_prioritized: Any
+    is_trusted: Any
+    last_seen: Any
+    country: Any
+    status: Any
 
 class Buddies:
     __slots__ = ("users", "_allow_saving_buddies")
