@@ -152,7 +152,7 @@ class Config:
 
         self._parser = ConfigParser(
             strict=False, interpolation=None, delimiters=("=",),
-            comment_prefixes=None
+            comment_prefixes=()
         )
         self.defaults = {
             "server": {
