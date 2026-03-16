@@ -27,6 +27,8 @@ class Buddy:
 
 class Buddies:
     __slots__ = ("users", "_allow_saving_buddies")
+    users: dict[str, Buddy]
+    _allow_saving_buddies: bool
 
     def __init__(self):
 
