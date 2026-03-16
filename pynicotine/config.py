@@ -20,6 +20,7 @@ from pynicotine.utils import encode_path
 from pynicotine.utils import load_file
 from pynicotine.utils import write_file_and_backup
 
+__all__ = ["Config"]
 
 class Config:
     """This class holds configuration information and provides the
