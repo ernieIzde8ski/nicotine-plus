@@ -43,11 +43,11 @@ class Config:
         self.set_config_file(os.path.join(config_folder_path, "config"))
         self.set_data_folder(data_folder_path)
 
-        self.config_loaded = False
-        self.sections = defaultdict(dict)
-        self.defaults = {}
-        self.removed_options = {}
-        self._parser = None
+        self.config_loaded: bool = False
+        self.sections: defaultdict = defaultdict(dict)
+        self.defaults: dict = {}
+        self.removed_options: dict = {}
+        self._parser: None = None
 
     @staticmethod
     def get_user_folders():
