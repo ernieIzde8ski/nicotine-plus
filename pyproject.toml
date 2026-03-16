@@ -10,3 +10,6 @@ build-backend = "setuptools.build_meta"
 pythonVersion = "3.9"
 pythonPlatform = "All"
 reportUnusedCallResult = false
+
+[tool.ruff]
+target-version = "py39"
