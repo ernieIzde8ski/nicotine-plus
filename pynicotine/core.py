@@ -4,11 +4,34 @@
 import os
 import sys
 import threading
+from typing import TYPE_CHECKING
 
 import pynicotine
 from pynicotine.config import config
 from pynicotine.events import events
 from pynicotine.logfacility import log
+
+if TYPE_CHECKING:
+    from pynicotine.buddies import Buddies
+    from pynicotine.chatrooms import ChatRooms
+    from pynicotine.downloads import Downloads
+    from pynicotine.interests import Interests
+    from pynicotine.networkfilter import NetworkFilter
+    from pynicotine.notifications import Notifications
+    from pynicotine.nowplaying import NowPlaying
+    from pynicotine.pluginsystem import PluginHandler
+    from pynicotine.portchecker import PortChecker
+    from pynicotine.portmapper import PortMapper
+    from pynicotine.privatechat import PrivateChat
+    from pynicotine.search import Search
+    from pynicotine.shares import Shares
+    from pynicotine.slskmessages import InternalMessage
+    from pynicotine.slskproto import NetworkThread
+    from pynicotine.transfers import Statistics
+    from pynicotine.uploads import Uploads
+    from pynicotine.userbrowse import UserBrowse
+    from pynicotine.userinfo import UserInfo
+    from pynicotine.users import Users
 
 
 class Core:
@@ -24,34 +47,34 @@ class Core:
 
     def __init__(self):
 
-        self.shares = None
-        self.users = None
-        self.network_filter = None
-        self.statistics = None
-        self.search = None
-        self.downloads = None
-        self.uploads = None
-        self.interests = None
-        self.userbrowse = None
-        self.userinfo = None
-        self.buddies = None
-        self.privatechat = None
-        self.chatrooms = None
-        self.pluginhandler = None
-        self.now_playing = None
-        self.portmapper = None
-        self.notifications = None
-        self.port_checker = None
-        self.update_checker = None
-        self._network_thread = None
+        self.shares: "Shares | None" = None
+        self.users: "Users | None" = None
+        self.network_filter: "NetworkFilter | None" = None
+        self.statistics: "Statistics | None" = None
+        self.search: "Search | None" = None
+        self.downloads: "Downloads | None" = None
+        self.uploads: "Uploads | None" = None
+        self.interests: "Interests | None" = None
+        self.userbrowse: "UserBrowse | None" = None
+        self.userinfo: "UserInfo | None" = None
+        self.buddies: "Buddies | None" = None
+        self.privatechat: "PrivateChat | None" = None
+        self.chatrooms: "ChatRooms | None" = None
+        self.pluginhandler: "PluginHandler | None" = None
+        self.now_playing: "NowPlaying | None" = None
+        self.portmapper: "PortMapper | None" = None
+        self.notifications: "Notifications | None" = None
+        self.port_checker: "PortChecker | None" = None
+        self.update_checker: "UpdateChecker | None" = None
+        self._network_thread: "NetworkThread | None" = None
 
-        self.cli_interface_address = None
-        self.cli_listen_port = None
-        self.cli_rescanning = None
+        self.cli_interface_address: str | None = None
+        self.cli_listen_port: int | None = None
+        self.cli_rescanning: bool | None = None
 
-        self.enabled_components = set()
+        self.enabled_components: set[str] = set()
 
-    def init_components(self, enabled_components=None, isolated_mode=False):
+    def init_components(self, enabled_components: set[str] | None = None, isolated_mode: bool = False):
 
         # Enable all components by default
         if enabled_components is None:
@@ -265,18 +288,18 @@ class Core:
         from pynicotine.slskmessages import ServerReconnect
         self.send_message_to_network_thread(ServerReconnect())
 
-    def _server_reconnect(self, _msg):
+    def _server_reconnect(self, _msg: object):
         self.connect()
 
-    def send_message_to_network_thread(self, message):
+    def send_message_to_network_thread(self, message: "InternalMessage"):
         """Sends message to the networking thread to inform about something."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_server(self, message):
+    def send_message_to_server(self, message: "InternalMessage"):
         """Sends message to the server."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_peer(self, username, message):
+    def send_message_to_peer(self, username, message: "InternalMessage"):
         """Sends message to a peer."""
 
         message.username = username
@@ -287,7 +310,7 @@ class UpdateChecker:
     __slots__ = ("_thread",)
 
     def __init__(self):
-        self._thread = None
+        self._thread: threading.Thread | None = None
 
     def check(self):
 
@@ -313,7 +336,7 @@ class UpdateChecker:
         events.emit_main_thread("check-latest-version", h_latest_version, is_outdated, error_message)
 
     @staticmethod
-    def create_integer_version(version):
+    def create_integer_version(version: str):
 
         major, minor, patch = version.split(".")[:3]
         stable = 1
