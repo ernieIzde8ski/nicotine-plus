@@ -12,7 +12,12 @@
 import os
 import sys
 
+from collections.abc import Mapping
+from collections.abc import Sequence
 from collections import defaultdict
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Union
 
 from pynicotine.events import events
 from pynicotine.i18n import apply_translations
@@ -20,7 +25,18 @@ from pynicotine.utils import encode_path
 from pynicotine.utils import load_file
 from pynicotine.utils import write_file_and_backup
 
+if TYPE_CHECKING:
+    from configparser import ConfigParser
+    from _typeshed import Incomplete
+else:
+    Incomplete = Any
+
 __all__ = ["Config"]
+
+_Section = Mapping[str, "_SectionField"]
+# TODO: 3.10 impending, we can have nice union syntax
+_SectionField = Union[_Section, Sequence["_SectionField"], str, int, bool]
+
 
 class Config:
     """This class holds configuration information and provides the
@@ -37,6 +53,12 @@ class Config:
 
     __slots__ = ("config_file_path", "data_folder_path", "config_loaded", "sections",
                  "defaults", "removed_options", "_parser")
+    config_file_path: str
+    data_folder_path: str
+    sections: _Section
+    defaults: _Section
+    removed_options: _Section
+    _parser: "ConfigParser | None"
 
     def __init__(self):
 
@@ -45,10 +67,10 @@ class Config:
         self.set_data_folder(data_folder_path)
 
         self.config_loaded: bool = False
-        self.sections: defaultdict = defaultdict(dict)
-        self.defaults: dict = {}
-        self.removed_options: dict = {}
-        self._parser: None = None
+        self.sections = defaultdict(dict)
+        self.defaults = {}
+        self.removed_options = {}
+        self._parser = None
 
     @staticmethod
     def get_user_folders():
