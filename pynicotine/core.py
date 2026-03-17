@@ -4,11 +4,15 @@
 import os
 import sys
 import threading
+from typing import TYPE_CHECKING
 
 import pynicotine
 from pynicotine.config import config
 from pynicotine.events import events
 from pynicotine.logfacility import log
+
+if TYPE_CHECKING:
+    from pynicotine.slskmessages import InternalMessage
 
 
 class Core:
@@ -45,13 +49,13 @@ class Core:
         self.update_checker = None
         self._network_thread = None
 
-        self.cli_interface_address = None
-        self.cli_listen_port = None
-        self.cli_rescanning = None
+        self.cli_interface_address: str | None = None
+        self.cli_listen_port: int | None = None
+        self.cli_rescanning: bool | None = None
 
-        self.enabled_components = set()
+        self.enabled_components: set[str] = set()
 
-    def init_components(self, enabled_components=None, isolated_mode=False):
+    def init_components(self, enabled_components: set[str] | None = None, isolated_mode: bool = False):
 
         # Enable all components by default
         if enabled_components is None:
@@ -265,18 +269,18 @@ class Core:
         from pynicotine.slskmessages import ServerReconnect
         self.send_message_to_network_thread(ServerReconnect())
 
-    def _server_reconnect(self, _msg):
+    def _server_reconnect(self, _msg: object):
         self.connect()
 
-    def send_message_to_network_thread(self, message):
+    def send_message_to_network_thread(self, message: "InternalMessage"):
         """Sends message to the networking thread to inform about something."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_server(self, message):
+    def send_message_to_server(self, message: "InternalMessage"):
         """Sends message to the server."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_peer(self, username, message):
+    def send_message_to_peer(self, username: str, message: "InternalMessage"):
         """Sends message to a peer."""
 
         message.username = username
@@ -287,7 +291,7 @@ class UpdateChecker:
     __slots__ = ("_thread",)
 
     def __init__(self):
-        self._thread = None
+        self._thread: threading.Thread | None = None
 
     def check(self):
 
@@ -313,7 +317,7 @@ class UpdateChecker:
         events.emit_main_thread("check-latest-version", h_latest_version, is_outdated, error_message)
 
     @staticmethod
-    def create_integer_version(version):
+    def create_integer_version(version: str):
 
         major, minor, patch = version.split(".")[:3]
         stable = 1
