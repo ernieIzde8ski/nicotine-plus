@@ -20,6 +20,7 @@ from cx_Freeze.hooks import _gi_ as gi      # pylint: disable=import-private-nam
 
 _T = TypeVar("_T")
 
+
 class DummyHook:
     pass
 
