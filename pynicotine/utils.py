@@ -9,6 +9,16 @@
 import os
 import sys
 
+from collections.abc import Iterable
+from collections.abc import Callable
+from typing import Any
+from typing import Literal
+from typing import ParamSpec
+from typing import TextIO
+from typing import TypeVar
+
+_P = ParamSpec("_P")
+
 UINT32_LIMIT = 4294967295
 UINT64_LIMIT = 18446744073709551615
 FILE_SIZE_SUFFIXES = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
@@ -131,7 +141,7 @@ REPLACEMENTCHAR = "_"
 TRANSLATE_PUNCTUATION = str.maketrans(dict.fromkeys(PUNCTUATION, " "))
 
 
-def clean_file(basename):
+def clean_file(basename: str) -> str:
 
     for char in ILLEGALFILECHARS:
         if char in basename:
@@ -146,7 +156,7 @@ def clean_file(basename):
     return basename
 
 
-def clean_path(path):
+def clean_path(path: str) -> str:
 
     path = os.path.normpath(path)
 
@@ -171,7 +181,7 @@ def clean_path(path):
     return path
 
 
-def encode_path(path, prefix=True):
+def encode_path(path: str, prefix: bool = True) -> bytes:
     """Converts a file path to bytes for processing by the system.
 
     On Windows, also append prefix to enable extended-length path.
@@ -188,7 +198,7 @@ def encode_path(path, prefix=True):
     return path.encode("utf-8")
 
 
-def human_duration_approx(seconds):
+def human_duration_approx(seconds: float | str) -> str:
     """Returns a string for an approximatation of any amount of time in a
     sensible unit of measurement, for use where precision isn't required."""
 
@@ -212,7 +222,7 @@ def human_duration_approx(seconds):
     return ngettext("%(num)s day", "%(num)s days", days) % {"num": humanize(days)}
 
 
-def human_length(seconds):
+def human_length(seconds: float) -> str:
     """Returns a string for exact ISO 8601 timestamp for track playing length
     when appropriate, approximate length otherwise."""
 
@@ -229,7 +239,7 @@ def human_length(seconds):
     return f"{minutes}:{seconds:02d}"
 
 
-def _human_speed_or_size(number, unit=None):
+def _human_speed_or_size(number: float, unit: Literal["B", None] = None) -> str:
 
     if unit == "B":
         return humanize(number)
@@ -246,19 +256,19 @@ def _human_speed_or_size(number, unit=None):
     return str(number)
 
 
-def human_speed(speed):
+def human_speed(speed: float) -> str:
     return _human_speed_or_size(speed) + "/s"
 
 
-def human_size(filesize, unit=None):
+def human_size(filesize: float, unit: Literal["B", None] = None):
     return _human_speed_or_size(filesize, unit)
 
 
-def humanize(number):
+def humanize(number: float) -> str:
     return f"{number:n}"
 
 
-def factorize(filesize, base=1024):
+def factorize(filesize: str, base: int = 1024) -> tuple[int | None, int | None]:
     """Converts filesize string with a given unit into raw integer size,
     defaults to binary for "k", "m", "g" suffixes (KiB, MiB, GiB)"""
 
@@ -296,7 +306,8 @@ def factorize(filesize, base=1024):
         return None, factor
 
 
-def truncate_string_byte(string, byte_limit, encoding="utf-8", ellipsize=False):
+def truncate_string_byte(string: str, byte_limit: int, encoding: str = "utf-8",
+                         ellipsize: bool = False) -> str:
     """Truncates a string to fit inside a byte limit."""
 
     string_bytes = string.encode(encoding)
@@ -314,7 +325,7 @@ def truncate_string_byte(string, byte_limit, encoding="utf-8", ellipsize=False):
     return string_bytes.decode(encoding, "ignore")
 
 
-def unescape(string):
+def unescape(string: str) -> str:
     """Removes quotes from the beginning and end of strings, and unescapes
     it."""
 
@@ -329,7 +340,7 @@ def unescape(string):
     return string
 
 
-def find_whole_word(word, text):
+def find_whole_word(word: str, text: str) -> int:
     """Returns start position of a whole word that is not in a subword."""
 
     if word not in text:
@@ -351,7 +362,7 @@ def find_whole_word(word, text):
     return start if whole else -1
 
 
-def censor_text(text, censored_patterns, filler="*"):
+def censor_text(text: str, censored_patterns: Iterable[str], filler: str = "*") -> str:
 
     for word in censored_patterns:
         word = str(word).strip().lower()
@@ -364,7 +375,7 @@ def censor_text(text, censored_patterns, filler="*"):
     return text
 
 
-def replace_text(text, replacements):
+def replace_text(text: str, replacements: dict[str, str]) -> str:
 
     for word, replacement in replacements.items():
         word = str(word).strip()
@@ -376,8 +387,9 @@ def replace_text(text, replacements):
     return text
 
 
-def execute_command(command, replacement=None, background=True, returnoutput=False,
-                    hidden=False, placeholder="$"):
+def execute_command(command: str, replacement: str | None = None, background: bool = True,
+                    returnoutput: bool = False, hidden: bool = False,
+                    placeholder: str = "$") -> bytes | Literal[True]:
     """Executes a string with commands, with partial support for bash-style
     quoting and pipes.
 
@@ -434,7 +446,7 @@ def execute_command(command, replacement=None, background=True, returnoutput=Fal
             background = True
 
     unparsed = command
-    arguments = []
+    arguments: list[str] = []
 
     while unparsed.count('"') > 1:
 
@@ -449,8 +461,8 @@ def execute_command(command, replacement=None, background=True, returnoutput=Fal
         arguments += unparsed.split(" ")
 
     # arguments is now: ['C:\Program Files\WinAmp\WinAmp.exe', '--xforce', '--title=My Title', '$', '|', 'flite', '-t']
-    subcommands = []
-    current = []
+    subcommands: list[list[str]] = []
+    current: list[str] = []
 
     for argument in arguments:
         if argument == "|":
@@ -471,7 +483,7 @@ def execute_command(command, replacement=None, background=True, returnoutput=Fal
     if returnoutput:
         finalstdout = PIPE
 
-    procs = []
+    procs: list[Popen[bytes]] = []
 
     try:
         if len(subcommands) == 1:  # no need to fool around with pipes
@@ -490,11 +502,11 @@ def execute_command(command, replacement=None, background=True, returnoutput=Fal
             procs[-1].wait()
 
     except Exception as error:
-        command = subcommands[len(procs)]
+        subcommand = subcommands[len(procs)]
         command_no = len(procs) + 1
         num_commands = len(subcommands)
         raise RuntimeError(
-            f"Problem while executing command {command} ({command_no} of "
+            f"Problem while executing command {subcommand} ({command_no} of "
             f"{num_commands}): {error}") from error
 
     if not returnoutput:
@@ -503,7 +515,7 @@ def execute_command(command, replacement=None, background=True, returnoutput=Fal
     return procs[-1].communicate()[0]
 
 
-def _try_open_uri(uri):
+def _try_open_uri(uri: str) -> None:
 
     if sys.platform not in {"darwin", "win32"}:
         try:
@@ -521,7 +533,8 @@ def _try_open_uri(uri):
         raise webbrowser.Error("No known URI provider available")
 
 
-def _open_path(path, is_folder=False, create_folder=False, create_file=False):
+def _open_path(path: str | None, is_folder: bool = False, create_folder: bool = False,
+               create_file: bool = False) -> bool:
     """Currently used to either open a folder or play an audio file.
 
     Tries to run a user-specified command first, and falls back to the system
@@ -538,8 +551,8 @@ def _open_path(path, is_folder=False, create_folder=False, create_file=False):
         path_encoded = encode_path(path)
         _path, separator, extension = path.rpartition(".")
         protocol_command = None
-        protocol_handlers = config.sections["urls"]["protocols"]
-        file_manager_command = config.sections["ui"]["filemanager"]
+        protocol_handlers: dict[str | None, str] = config.sections["urls"]["protocols"]
+        file_manager_command: str = config.sections["ui"]["filemanager"]
 
         if separator:
             from pynicotine.shares import FileTypes
@@ -604,15 +617,15 @@ def _open_path(path, is_folder=False, create_folder=False, create_file=False):
     return True
 
 
-def open_file_path(file_path, create_file=False):
+def open_file_path(file_path: str, create_file: bool = False):
     return _open_path(path=file_path, create_file=create_file)
 
 
-def open_folder_path(folder_path, create_folder=False):
+def open_folder_path(folder_path: str, create_folder: bool = False):
     return _open_path(path=folder_path, is_folder=True, create_folder=create_folder)
 
 
-def open_uri(uri):
+def open_uri(uri: str):
     """Open a URI in an external (web) browser."""
 
     from pynicotine.config import config
@@ -625,7 +638,7 @@ def open_uri(uri):
         protocol = uri[:uri.find(":")]
 
         if not protocol.startswith(".") and protocol not in {"audio", "image", "video", "document", "text", "archive"}:
-            protocol_handlers = config.sections["urls"]["protocols"]
+            protocol_handlers: dict[str | None, str] = config.sections["urls"]["protocols"]
             protocol_command = protocol_handlers.get(protocol + "://") or protocol_handlers.get(protocol)
 
             if protocol_command:
@@ -649,7 +662,11 @@ def open_uri(uri):
     return False
 
 
-def load_file(file_path, load_func, use_old_file=False):
+_T = TypeVar("_T")
+
+
+def load_file(file_path: str, load_func: Callable[[str], _T],
+              use_old_file: bool = False) -> _T | None:
 
     try:
         if use_old_file:
@@ -680,7 +697,8 @@ def load_file(file_path, load_func, use_old_file=False):
     return None
 
 
-def write_file_and_backup(path, callback, protect=False):
+def write_file_and_backup(path: str, callback: Callable[[TextIO], Any],
+                          protect: bool = False) -> None:
 
     from pynicotine.logfacility import log
 
@@ -740,7 +758,7 @@ def write_file_and_backup(path, callback, protect=False):
 # Debugging #
 
 
-def debug(*args):
+def debug(*args: object):
     """Prints debugging info."""
 
     from pynicotine.logfacility import log
@@ -749,13 +767,14 @@ def debug(*args):
     log.add("*" * 8, truncated_args)
 
 
-def strace(function):
+def strace(function: Callable[_P, _T]) -> Callable[_P, _T]:
     """Decorator for debugging."""
 
     from itertools import chain
+
     from pynicotine.logfacility import log
 
-    def newfunc(*args, **kwargs):
+    def newfunc(*args: _P.args, **kwargs: _P.kwargs) -> _T:
         name = function.__name__
         log.add(f"{name}({', '.join(repr(x) for x in chain(args, list(kwargs.values())))})")
         retvalue = function(*args, **kwargs)
