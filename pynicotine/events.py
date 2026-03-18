@@ -4,9 +4,13 @@
 import time
 
 from collections import defaultdict
+from collections.abc import Callable
 from queue import Empty, SimpleQueue
 from threading import Thread
+from typing import ParamSpec
 
+_P = ParamSpec("_P")
+_Callback = Callable[..., object]
 
 EVENT_NAMES = {
     # General
@@ -194,8 +198,8 @@ class SchedulerEvent:
 
     __slots__ = ("event_id", "next_time", "delay", "repeat", "callback", "callback_args")
 
-    def __init__(self, event_id, next_time=None, delay=None, repeat=None,
-                 callback=None, callback_args=None):
+    def __init__(self, event_id, next_time: None = None, delay: None = None, repeat: None = None,
+                 callback: None = None, callback_args: None = None):
 
         self.event_id = event_id
         self.next_time = next_time
@@ -224,12 +228,12 @@ class Events:
 
     def __init__(self):
 
-        self._callbacks: defaultdict[str, list] = defaultdict(list)
+        self._callbacks: defaultdict[str, list[_Callback]] = defaultdict(list)
         self._thread_events: SimpleQueue = SimpleQueue()
         self._pending_scheduler_events: SimpleQueue = SimpleQueue()
         self._scheduler_events: dict = {}
         self._scheduler_event_id: int = 0
-        self._scheduler_thread: None = None
+        self._scheduler_thread: Thread | None = None
         self._is_active: bool = False
 
     def enable(self):
@@ -246,7 +250,7 @@ class Events:
         ):
             self.connect(event_name, callback)
 
-    def connect(self, event_name, function):
+    def connect(self, event_name: str, function):
 
         if event_name not in EVENT_NAMES:
             raise ValueError(f"Unknown event {event_name}")
@@ -261,7 +265,7 @@ class Events:
     def disconnect(self, event_name, function):
         self._callbacks[event_name].remove(function)
 
-    def emit(self, event_name, *args, **kwargs):
+    def emit(self, event_name: str, *args, **kwargs):
 
         for function in self._callbacks[event_name]:
             try:
@@ -300,7 +304,7 @@ class Events:
         )
         return self._scheduler_event_id
 
-    def schedule_at(self, timestamp, callback, callback_args=None):
+    def schedule_at(self, timestamp: float, callback: Callable[_P, object], callback_args: _P | None = None):
         delay = (timestamp - time.time())
         return self.schedule(delay, callback, callback_args, repeat=False)
 
@@ -381,7 +385,7 @@ class Events:
         self._scheduler_thread = Thread(target=self._run_scheduler, name="SchedulerThread")
         self._scheduler_thread.start()
 
-    def _thread_callback(self, callback, *args, **kwargs):
+    def _thread_callback(self, callback: Callable[_P, object], *args: _P.args, **kwargs: _P.kwargs) -> None:
         callback(*args, **kwargs)
 
     def _quit(self):
