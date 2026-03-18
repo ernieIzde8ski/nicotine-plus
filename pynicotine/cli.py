@@ -20,8 +20,10 @@ import sys
 import time
 
 from collections import deque
+from collections.abc import Callable
 from getpass import getpass
 from threading import Thread
+from typing import Any
 
 from pynicotine.events import events
 
@@ -32,12 +34,12 @@ class CLIInputProcessor(Thread):
 
         super().__init__(name="CLIInputProcessor", daemon=True)
 
-        self.has_custom_prompt = False
-        self.prompt_message = ""
-        self.prompt_callback = None
-        self.prompt_silent = False
+        self.has_custom_prompt: bool = False
+        self.prompt_message: str = ""
+        self.prompt_callback: Callable[[str], Any] | None = None
+        self.prompt_silent: bool = False
 
-    def run(self):
+    def run(self) -> None:
 
         while True:
             # Small time window to set custom prompt
@@ -50,7 +52,7 @@ class CLIInputProcessor(Thread):
                 # CLI input prompt is no longer available
                 return
 
-    def _handle_prompt_callback(self, user_input, callback):
+    def _handle_prompt_callback(self, user_input: str, callback: Callable[[str], Any] | None):
 
         if not callback:
             return False
@@ -58,7 +60,7 @@ class CLIInputProcessor(Thread):
         events.invoke_main_thread(callback, user_input)
         return True
 
-    def _handle_prompt_command(self, user_input):
+    def _handle_prompt_command(self, user_input: str):
 
         if not user_input:
             return False
@@ -107,10 +109,10 @@ class CLI:
 
     def __init__(self):
 
-        self._input_processor = CLIInputProcessor()
-        self._log_message_queue = deque(maxlen=1000)
-        self._has_tty = sys.stdin is not None and sys.stdin.isatty()
-        self._tty_attributes = None
+        self._input_processor: CLIInputProcessor = CLIInputProcessor()
+        self._log_message_queue: deque[str] = deque(maxlen=1000)
+        self._has_tty: bool = sys.stdin is not None and sys.stdin.isatty()
+        self._tty_attributes: list[Any] | None = None
 
         events.connect("quit", self._quit)
 
@@ -137,7 +139,7 @@ class CLI:
         ):
             events.connect(event_name, callback)
 
-    def prompt(self, message, callback, is_silent=False):
+    def prompt(self, message: str, callback: Callable[[str], Any], is_silent: bool = False) -> None:
 
         if not self._has_tty:
             return
@@ -146,7 +148,7 @@ class CLI:
         self._input_processor.prompt_callback = callback
         self._input_processor.prompt_silent = is_silent
 
-    def _print_log_message(self, log_message, prompt_line=None):
+    def _print_log_message(self, log_message: object, prompt_line: str | None = None):
 
         try:
             if prompt_line:
@@ -164,7 +166,7 @@ class CLI:
         while self._log_message_queue:
             self._print_log_message(self._log_message_queue.popleft())
 
-    def _log_message(self, timestamp_format, msg, _title, _level):
+    def _log_message(self, timestamp_format: str, msg: str, _title: str, _level: object) -> None:
 
         if timestamp_format:
             timestamp = time.strftime(timestamp_format)
