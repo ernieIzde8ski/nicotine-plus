@@ -14,10 +14,8 @@ from pynicotine.slskmessages import UserStatus
 def _is_object_list(obj: object) -> TypeGuard[list[object]]:
     return isinstance(obj, list)
 
-@dataclass
+@dataclass(slots=True)
 class Buddy:
-    __slots__ = ("username", "note", "notify_status", "is_prioritized", "is_trusted", "last_seen",
-                 "country", "status")
     username: Any
     note: Any
     notify_status: Any
