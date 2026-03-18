@@ -12,12 +12,12 @@
 import os
 import sys
 
+from collections import defaultdict
 from collections.abc import Mapping
 from collections.abc import Sequence
-from collections import defaultdict
 from typing import TYPE_CHECKING
-from typing import Any
-from typing import Union
+from typing import TypeAlias
+from typing import TypedDict
 
 from pynicotine.events import events
 from pynicotine.i18n import apply_translations
@@ -27,15 +27,118 @@ from pynicotine.utils import write_file_and_backup
 
 if TYPE_CHECKING:
     from configparser import ConfigParser
-    from _typeshed import Incomplete
-else:
-    Incomplete = Any
 
 __all__ = ["Config"]
 
-_Section = Mapping[str, "_SectionField"]
-# TODO: 3.10 impending, we can have nice union syntax
-_SectionField = Union[_Section, Sequence["_SectionField"], str, int, bool]
+_Section: TypeAlias = Mapping[str, "_SectionField"]
+_SectionField: TypeAlias = _Section | Sequence["_SectionField"] | str | int | bool
+
+
+class ServerSection(TypedDict):
+    server: tuple[str, int]
+    login: str
+    passw: str
+    interface: str
+    ctcpmsgs: bool
+    autosearch: list
+    autoreply: str
+    portrange: tuple[int, int]
+    upnp: bool
+    upnp_interval: int
+    auto_connect_startup: bool
+    userlist: list
+    banlist: list
+    ignorelist: list
+    ipignorelist: dict
+    ipblocklist: dict
+    autojoin: list
+    autoaway: int
+    away: bool
+    private_chatrooms: bool
+
+
+class TransfersSection(TypedDict):
+    ...
+
+
+class UserBrowseSection(TypedDict):
+    ...
+
+
+class UserInfoSection(TypedDict):
+    ...
+
+
+class WordsSection(TypedDict):
+    ...
+
+
+class LoggingSection(TypedDict):
+    ...
+
+
+class ChatroomsSection(TypedDict):
+    ...
+
+
+class PrivateChatSection(TypedDict):
+    ...
+
+
+class ColumnsSection(TypedDict):
+    ...
+
+
+class SearchesSection(TypedDict):
+    ...
+
+
+class UISection(TypedDict):
+    ...
+
+
+class UrlsSection(TypedDict):
+    ...
+
+
+class InterestsSection(TypedDict):
+    ...
+
+
+class PlayersSection(TypedDict):
+    ...
+
+
+class NotificationsSection(TypedDict):
+    ...
+
+
+class PluginsSection(TypedDict):
+    ...
+
+
+class StatisticsSection(TypedDict):
+    ...
+
+
+class Sections(TypedDict):
+    server: ServerSection
+    transfers: TransfersSection
+    userbrowse: UserBrowseSection
+    userinfo: UserInfoSection
+    words: WordsSection
+    logging: LoggingSection
+    chatrooms: ChatroomsSection
+    privatechat: PrivateChatSection
+    columns: ColumnsSection
+    searches: SearchesSection
+    ui: UISection
+    urls: UrlsSection
+    interests: InterestsSection
+    players: PlayersSection
+    notifications: NotificationsSection
+    plugins: PluginsSection
+    statistics: StatisticsSection
 
 
 class Config:
@@ -55,7 +158,7 @@ class Config:
                  "defaults", "removed_options", "_parser")
     config_file_path: str
     data_folder_path: str
-    sections: _Section
+    sections: Sections
     defaults: _Section
     removed_options: _Section
     _parser: "ConfigParser | None"
@@ -73,7 +176,7 @@ class Config:
         self._parser = None
 
     @staticmethod
-    def get_user_folders():
+    def get_user_folders() -> tuple[str, str]:
         """Returns a tuple:
 
         - the config folder
@@ -101,7 +204,7 @@ class Config:
         if os.path.isdir(encode_path(legacy_folder_path)):
             return legacy_folder_path, legacy_folder_path
 
-        def xdg_path(xdg, default):
+        def xdg_path(xdg: str, default: str) -> str:
             path = os.environ.get(xdg)
             path = path.split(":")[0] if path else default
 
@@ -112,10 +215,10 @@ class Config:
 
         return config_folder_path, data_folder_path
 
-    def set_config_file(self, file_path):
+    def set_config_file(self, file_path: str):
         self.config_file_path = os.path.abspath(file_path)
 
-    def set_data_folder(self, folder_path):
+    def set_data_folder(self, folder_path: str):
         self.data_folder_path = os.environ["NICOTINE_DATA_HOME"] = os.path.abspath(folder_path)
 
     def create_config_folder(self):
@@ -143,7 +246,7 @@ class Config:
 
         return True
 
-    def create_data_folder(self):
+    def create_data_folder(self) -> None:
         """Create the folder for storing data in (shared files etc.), if the
         folder doesn't exist."""
 
@@ -159,7 +262,7 @@ class Config:
             log.add(_("Cannot create folder %(path)s: %(error)s"),
                     {"path": self.data_folder_path, "error": error})
 
-    def load_config(self, isolated_mode=False):
+    def load_config(self, isolated_mode: bool = False) -> None:
 
         if self.config_loaded:
             return
@@ -628,7 +731,7 @@ class Config:
         # Check if we have specified a username or password
         return not self.sections["server"]["login"] or not self.sections["server"]["passw"]
 
-    def _parse_config(self, file_path):
+    def _parse_config(self, file_path: str) -> None:
         """Parses the config file."""
 
         with open(encode_path(file_path), "a+", encoding="utf-8") as file_handle:
