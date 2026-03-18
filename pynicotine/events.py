@@ -4,10 +4,10 @@
 import time
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from queue import Empty, SimpleQueue
 from threading import Thread
-from typing import ParamSpec
+from typing import Any, ParamSpec
 
 _P = ParamSpec("_P")
 _Callback = Callable[..., object]
@@ -198,15 +198,16 @@ class SchedulerEvent:
 
     __slots__ = ("event_id", "next_time", "delay", "repeat", "callback", "callback_args")
 
-    def __init__(self, event_id, next_time: None = None, delay: None = None, repeat: None = None,
-                 callback: None = None, callback_args: None = None):
+    def __init__(self, event_id: int, next_time: float | None = None, delay: float | None = None,
+                 repeat: bool | None = None, callback: Callable[..., Any] | None = None,
+                 callback_args: Sequence[Any] | None = None):
 
-        self.event_id = event_id
-        self.next_time = next_time
-        self.delay = delay
-        self.repeat = repeat
-        self.callback = callback
-        self.callback_args = callback_args
+        self.event_id: int = event_id
+        self.next_time: float | None = next_time
+        self.delay: float | None = delay
+        self.repeat: bool | None = repeat
+        self.callback: Callable[..., Any] | None = callback
+        self.callback_args: Sequence[Any] | None = callback_args
 
 
 class ThreadEvent:
