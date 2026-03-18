@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 
-from typing import Any
+from typing import TypeVar
 from typing import Callable
 
 from cx_Freeze import Executable, setup     # pylint: disable=import-error
@@ -18,6 +18,7 @@ from cx_Freeze.hooks import _gi_ as gi      # pylint: disable=import-private-nam
 
 # pylint: disable=duplicate-code
 
+_T = TypeVar("_T")
 
 class DummyHook:
     pass
@@ -72,7 +73,7 @@ include_files: list[tuple[str, str]] = []
 
 
 def process_files(
-    folder_path: str, callback: Callable[[str, str, Any], None], callback_data: Any = None,
+    folder_path: str, callback: Callable[[str, str, _T], None], callback_data: _T = None,
     starts_with: tuple[str, ...] | str | None = None, ends_with: tuple[str, ...] | str | None = None,
     recursive: bool = False
 ) -> None:
