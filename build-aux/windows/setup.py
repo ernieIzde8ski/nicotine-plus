@@ -10,6 +10,9 @@ import subprocess
 import sys
 import tempfile
 
+from typing import Any
+from typing import Callable
+
 from cx_Freeze import Executable, setup     # pylint: disable=import-error
 from cx_Freeze.hooks import _gi_ as gi      # pylint: disable=import-private-name
 
@@ -65,10 +68,14 @@ INCLUDED_MODULES = [MODULE_NAME, "gi"] + list(
     {module for module in sys.stdlib_module_names if not module.startswith("_")}.difference(EXCLUDED_MODULES)
 )
 
-include_files = []
+include_files: list[tuple[str, str]] = []
 
 
-def process_files(folder_path, callback, callback_data=None, starts_with=None, ends_with=None, recursive=False):
+def process_files(
+    folder_path: str, callback: Callable[[str, str, Any], None], callback_data: Any = None,
+    starts_with: tuple[str, ...] | str | None = None, ends_with: tuple[str, ...] | str | None = None,
+    recursive: bool = False
+) -> None:
 
     for full_path in glob.glob(os.path.join(folder_path, "**"), recursive=recursive):
         short_path = os.path.relpath(full_path, folder_path)
@@ -82,15 +89,18 @@ def process_files(folder_path, callback, callback_data=None, starts_with=None, e
         callback(full_path, short_path, callback_data)
 
 
-def add_file(file_path, output_path):
+def add_file(file_path: str, output_path: str) -> None:
     include_files.append((file_path, output_path))
 
 
-def _add_files_callback(full_path, short_path, output_path):
+def _add_files_callback(full_path: str, short_path: str, output_path: str) -> None:
     add_file(full_path, os.path.join(output_path, short_path))
 
 
-def add_files(folder_path, output_path, starts_with=None, ends_with=None, recursive=False):
+def add_files(
+    folder_path: str, output_path: str, starts_with: str | tuple[str, ...] | None = None,
+    ends_with: str | None = None, recursive: bool = False
+) -> None:
 
     process_files(
         folder_path, _add_files_callback, callback_data=output_path,
@@ -98,7 +108,7 @@ def add_files(folder_path, output_path, starts_with=None, ends_with=None, recurs
     )
 
 
-def add_pixbuf_loaders():
+def add_pixbuf_loaders() -> None:
 
     pixbuf_loaders_path = os.path.join(SYS_BASE_PATH, "lib/gdk-pixbuf-2.0/2.10.0/loaders")
     loader_extension = "dll" if sys.platform == "win32" else "so"
@@ -113,7 +123,7 @@ def add_pixbuf_loaders():
         )
 
 
-def _add_typelibs_callback(full_path, short_path, _callback_data=None):
+def _add_typelibs_callback(full_path: str, short_path: str, _callback_data: None = None) -> None:
 
     from xml.etree import ElementTree
 
@@ -129,7 +139,7 @@ def _add_typelibs_callback(full_path, short_path, _callback_data=None):
         xml = ElementTree.fromstring(real_file_handle.read())
 
         for namespace in xml.findall(".//{*}namespace[@shared-library]"):
-            paths = []
+            paths: list[str] = []
 
             for path in namespace.attrib["shared-library"].split(","):
                 updated_path = os.path.join("@loader_path", os.path.basename(path))
@@ -143,7 +153,7 @@ def _add_typelibs_callback(full_path, short_path, _callback_data=None):
     subprocess.check_call(["g-ir-compiler", f"--output={temp_file_typelib}", temp_file_gir])
 
 
-def add_typelibs():
+def add_typelibs() -> None:
 
     required_typelibs = [
         "Adw-",
@@ -184,7 +194,7 @@ def add_typelibs():
     )
 
 
-def add_gtk():
+def add_gtk() -> None:
 
     # Libraries
     if sys.platform == "win32":
@@ -222,12 +232,12 @@ def add_gtk():
     add_typelibs()
 
 
-def add_ssl_certs():
+def add_ssl_certs() -> None:
     ssl_paths = ssl.get_default_verify_paths()
     add_file(file_path=ssl_paths.openssl_cafile, output_path="lib/cert.pem")
 
 
-def add_translations():
+def add_translations() -> None:
 
     from setup import build_translations  # noqa: E402  # pylint: disable=import-self,no-name-in-module
     build_translations()
