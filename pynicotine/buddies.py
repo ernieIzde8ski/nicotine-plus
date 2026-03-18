@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeGuard
 
 from pynicotine.config import config
 from pynicotine.core import core
@@ -11,6 +11,8 @@ from pynicotine.events import events
 from pynicotine.logfacility import log
 from pynicotine.slskmessages import UserStatus
 
+def _is_object_list(obj: object) -> TypeGuard[list[object]]:
+    return isinstance(obj, list)
 
 @dataclass
 class Buddy:
@@ -125,7 +127,7 @@ class Buddies:
         for username in self.users:
             core.users.watch_user(username, context="buddies")
 
-    def _server_disconnect(self, _msg):
+    def _server_disconnect(self, _msg: object):
 
         for username, user_data in self.users.items():
             user_data.status = UserStatus.OFFLINE
@@ -219,7 +221,7 @@ class Buddies:
 
         events.emit("buddy-trusted", username, trusted)
 
-    def set_buddy_last_seen(self, username, is_online):
+    def set_buddy_last_seen(self, username: str, is_online: bool):
 
         if username not in self.users:
             return
