@@ -3,27 +3,25 @@
 
 from dataclasses import dataclass
 import time
-from typing import TYPE_CHECKING, Any, TypeGuard
 
 from pynicotine.config import config
 from pynicotine.core import core
 from pynicotine.events import events
 from pynicotine.logfacility import log
-from pynicotine.slskmessages import UserStatus
+from pynicotine.slskmessages import GetUserStatus, UserStatus
 
-def _is_object_list(obj: object) -> TypeGuard[list[object]]:
-    return isinstance(obj, list)
 
 @dataclass(slots=True)
 class Buddy:
-    username: Any
-    note: Any
-    notify_status: Any
-    is_prioritized: Any
-    is_trusted: Any
-    last_seen: Any
-    country: Any
-    status: Any
+    username: str
+    note: str
+    notify_status: bool
+    is_prioritized: bool
+    is_trusted: bool
+    last_seen: str
+    country: str
+    status: UserStatus | None
+
 
 class Buddies:
     __slots__ = ("users", "_allow_saving_buddies")
@@ -133,7 +131,7 @@ class Buddies:
 
         self.save_buddy_list()
 
-    def add_buddy(self, username):
+    def add_buddy(self, username: str) -> None:
 
         if username in self.users:
             return
@@ -166,7 +164,7 @@ class Buddies:
         # Request user status, speed and number of shared files
         core.users.watch_user(username, context="buddies")
 
-    def remove_buddy(self, username):
+    def remove_buddy(self, username: str):
 
         if username in self.users:
             del self.users[username]
@@ -179,7 +177,7 @@ class Buddies:
         self.save_buddy_list()
         events.emit("remove-buddy", username)
 
-    def set_buddy_note(self, username, note):
+    def set_buddy_note(self, username: str, note: str) -> None:
 
         if username not in self.users:
             return
@@ -189,7 +187,7 @@ class Buddies:
 
         events.emit("buddy-note", username, note)
 
-    def set_buddy_notify(self, username, notify):
+    def set_buddy_notify(self, username: str, notify: bool):
 
         if username not in self.users:
             return
@@ -199,7 +197,7 @@ class Buddies:
 
         events.emit("buddy-notify", username, notify)
 
-    def set_buddy_prioritized(self, username, prioritized):
+    def set_buddy_prioritized(self, username: str, prioritized: bool):
 
         if username not in self.users:
             return
@@ -209,7 +207,7 @@ class Buddies:
 
         events.emit("buddy-prioritized", username, prioritized)
 
-    def set_buddy_trusted(self, username, trusted):
+    def set_buddy_trusted(self, username: str, trusted: bool):
 
         if username not in self.users:
             return
@@ -237,7 +235,7 @@ class Buddies:
 
         events.emit("buddy-last-seen", username, is_online)
 
-    def _user_country(self, username, country_code):
+    def _user_country(self, username: str, country_code: str):
 
         if not country_code:
             return
@@ -252,7 +250,7 @@ class Buddies:
         if not self._allow_saving_buddies:
             return
 
-        user_rows = []
+        user_rows: list[list[object]] = []
 
         for username, user_data in self.users.items():
             user_rows.append([
@@ -268,7 +266,7 @@ class Buddies:
         config.sections["server"]["userlist"] = user_rows
         config.write_configuration()
 
-    def _user_status(self, msg):
+    def _user_status(self, msg: GetUserStatus):
         """Server code 7."""
 
         username = msg.user
