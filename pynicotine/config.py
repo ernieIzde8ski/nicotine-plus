@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from typing import TypeAlias
 from typing import TypedDict
 
@@ -94,7 +94,62 @@ class SearchesSection(TypedDict):
 
 
 class UISection(TypedDict):
-    ...
+    language: str
+    dark_mode: bool
+    header_bar: bool
+    icontheme: str
+    chatme: str
+    chatremote: str
+    chatlocal: str
+    chatcommand: str
+    chathilite: str
+    urlcolor: str
+    useronline: str
+    useraway: str
+    useroffline: str
+    usernamehotspots: bool
+    usernamestyle: Literal["bold"]
+    textbg: str
+    search: str
+    inputcolor: str
+    spellcheck: bool
+    exitdialog: int
+    tab_default: str
+    tab_hilite: str
+    tab_changed: str
+    tab_select_previous: bool
+    tabmain: str
+    tabrooms: str
+    tabprivate: str
+    tabinfo: str
+    tabbrowse: str
+    tabsearch: str
+    globalfont: str
+    textviewfont: str
+    chatfont: str
+    tabclosers: bool
+    searchfont: str
+    listfont: str
+    browserfont: str
+    transfersfont: str
+    last_tab_id: str
+    modes_visible: dict[str, bool]
+    modes_order: list[str]
+    buddylistinchatrooms: str
+    trayicon: bool
+    startup_hidden: bool
+    filemanager: str
+    speechenabled: bool
+    speechprivate: str
+    speechrooms: str
+    speechcommand: str
+    width: int
+    height: int
+    xposition: int
+    yposition: int
+    maximized: bool
+    reverse_file_paths: bool
+    file_size_unit: str
 
 
 class UrlsSection(TypedDict):
@@ -159,7 +214,7 @@ class Config:
     config_file_path: str
     data_folder_path: str
     sections: Sections
-    defaults: _Section
+    defaults: Sections
     removed_options: _Section
     _parser: "ConfigParser | None"
 
@@ -280,7 +335,7 @@ class Config:
             comment_prefixes=()
         )
         self.defaults = {
-            "server": {
+            "server": ServerSection({
                 "server": ("server.slsknet.org", 2242),
                 "login": "",
                 "passw": "",
@@ -301,7 +356,7 @@ class Config:
                 "autoaway": 15,
                 "away": False,
                 "private_chatrooms": False
-            },
+            }),
             "transfers": {
                 "incompletedir": os.path.join(data_home_env, "incomplete"),
                 "downloaddir": os.path.join(data_home_env, "downloads"),
@@ -454,47 +509,47 @@ class Config:
                 "min_search_chars": 3,
                 "private_search_results": False
             },
-            "ui": {
-                "language": "",
-                "dark_mode": False,
-                "header_bar": True,
-                "icontheme": "",
-                "chatme": "#908E8B",
-                "chatremote": "",
-                "chatlocal": "",
-                "chatcommand": "#908E8B",
-                "chathilite": "#5288CE",
-                "urlcolor": "#5288CE",
-                "useronline": "#16BB5C",
-                "useraway": "#C9AE13",
-                "useroffline": "#E04F5E",
-                "usernamehotspots": True,
-                "usernamestyle": "bold",
-                "textbg": "",
-                "search": "",
-                "inputcolor": "",
-                "spellcheck": True,
-                "exitdialog": 1,
-                "tab_default": "",
-                "tab_hilite": "#497EC2",
-                "tab_changed": "#497EC2",
-                "tab_select_previous": True,
-                "tabmain": "Top",
-                "tabrooms": "Top",
-                "tabprivate": "Top",
-                "tabinfo": "Top",
-                "tabbrowse": "Top",
-                "tabsearch": "Top",
-                "globalfont": "",
-                "textviewfont": "",
-                "chatfont": "",
-                "tabclosers": True,
-                "searchfont": "",
-                "listfont": "",
-                "browserfont": "",
-                "transfersfont": "",
-                "last_tab_id": "",
-                "modes_visible": {
+            "ui": UISection(
+                language="",
+                dark_mode=False,
+                header_bar=True,
+                icontheme="",
+                chatme="#908E8B",
+                chatremote="",
+                chatlocal="",
+                chatcommand="#908E8B",
+                chathilite="#5288CE",
+                urlcolor="#5288CE",
+                useronline="#16BB5C",
+                useraway="#C9AE13",
+                useroffline="#E04F5E",
+                usernamehotspots=True,
+                usernamestyle="bold",
+                textbg="",
+                search="",
+                inputcolor="",
+                spellcheck=True,
+                exitdialog=1,
+                tab_default="",
+                tab_hilite="#497EC2",
+                tab_changed="#497EC2",
+                tab_select_previous=True,
+                tabmain="Top",
+                tabrooms="Top",
+                tabprivate="Top",
+                tabinfo="Top",
+                tabbrowse="Top",
+                tabsearch="Top",
+                globalfont="",
+                textviewfont="",
+                chatfont="",
+                tabclosers=True,
+                searchfont="",
+                listfont="",
+                browserfont="",
+                transfersfont="",
+                last_tab_id="",
+                modes_visible={
                     "search": True,
                     "downloads": True,
                     "uploads": True,
@@ -504,7 +559,7 @@ class Config:
                     "chatrooms": True,
                     "interests": True
                 },
-                "modes_order": [
+                modes_order=[
                     "search",
                     "downloads",
                     "uploads",
@@ -515,22 +570,22 @@ class Config:
                     "chatrooms",
                     "interests"
                 ],
-                "buddylistinchatrooms": "tab",
-                "trayicon": True,
-                "startup_hidden": False,
-                "filemanager": "",
-                "speechenabled": False,                                              # TODO: remove in 3.4.0
-                "speechprivate": "User %(user)s told you: %(message)s",              # TODO: remove in 3.4.0
-                "speechrooms": "In room %(room)s, user %(user)s said: %(message)s",  # TODO: remove in 3.4.0
-                "speechcommand": "flite -t $",                                       # TODO: remove in 3.4.0
-                "width": 800,
-                "height": 600,
-                "xposition": -1,
-                "yposition": -1,
-                "maximized": True,
-                "reverse_file_paths": True,
-                "file_size_unit": ""
-            },
+                buddylistinchatrooms="tab",
+                trayicon=True,
+                startup_hidden=False,
+                filemanager="",
+                speechenabled=False,                                              # TODO: remove in 3.4.0
+                speechprivate="User %(user)s told you: %(message)s",              # TODO: remove in 3.4.0
+                speechrooms="In room %(room)s, user %(user)s said: %(message)s",  # TODO: remove in 3.4.0
+                speechcommand="flite -t $",                                       # TODO: remove in 3.4.0
+                width=800,
+                height=600,
+                xposition=-1,
+                yposition=-1,
+                maximized=True,
+                reverse_file_paths=True,
+                file_size_unit=""
+            ),
             "urls": {
                 "protocols": {}
             },
