@@ -7,7 +7,10 @@ import sys
 import time
 
 from collections import deque
+from dataclasses import dataclass
+from dataclasses import field as Field
 from enum import Enum
+from typing import TextIO
 
 from pynicotine.config import config
 from pynicotine.events import events
@@ -20,13 +23,11 @@ from pynicotine.utils import encode_path
 from pynicotine.utils import open_file_path
 
 
+@dataclass(slots=True)
 class LogFile:
-    __slots__ = ("path", "handle", "last_active")
-
-    def __init__(self, path, handle):
-        self.path = path
-        self.handle = handle
-        self.last_active = time.monotonic()
+    path: str
+    handle: TextIO
+    last_active: float = Field(init=False, default_factory=time.monotonic)
 
 
 # TODO: Does this have the same performance as not using Enum?
