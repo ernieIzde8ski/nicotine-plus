@@ -4,7 +4,7 @@
 import time
 
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from queue import Empty, SimpleQueue
 from threading import Thread
 from typing import Any, ParamSpec
@@ -214,11 +214,11 @@ class ThreadEvent:
 
     __slots__ = ("event_name", "args", "kwargs")
 
-    def __init__(self, event_name, args, kwargs):
+    def __init__(self, event_name: str, args: Iterable[object], kwargs: Mapping[str, object]):
 
-        self.event_name = event_name
-        self.args = args
-        self.kwargs = kwargs
+        self.event_name: str = event_name
+        self.args: Iterable[object] = args
+        self.kwargs: Mapping[str, object] = kwargs
 
 
 class Events:
