@@ -10,8 +10,8 @@ import subprocess
 import sys
 import tempfile
 
-from typing import TypeVar
 from typing import Callable
+from typing import TypeVar
 
 from cx_Freeze import Executable, setup     # pylint: disable=import-error
 from cx_Freeze.hooks import _gi_ as gi      # pylint: disable=import-private-name
@@ -100,7 +100,8 @@ def _add_files_callback(full_path: str, short_path: str, output_path: str) -> No
 
 
 def add_files(
-    folder_path: str, output_path: str, starts_with: str | tuple[str, ...] | None = None,
+    folder_path: str, output_path: str,
+    starts_with: str | tuple[str, ...] | None = None,
     ends_with: str | None = None, recursive: bool = False
 ) -> None:
 
