@@ -4,15 +4,18 @@
 import os
 import sys
 import threading
-from typing import TYPE_CHECKING
+
+from threading import Thread
 
 import pynicotine
 from pynicotine.config import config
 from pynicotine.events import events
 from pynicotine.logfacility import log
-
-if TYPE_CHECKING:
-    from pynicotine.slskmessages import InternalMessage
+from pynicotine.slskmessages import InternalMessage
+from pynicotine.slskmessages import PeerMessage
+from pynicotine.slskmessages import ServerDisconnect
+from pynicotine.slskmessages import ServerMessage
+from pynicotine.slskmessages import ServerReconnect
 
 
 class Core:
@@ -262,25 +265,23 @@ class Core:
         ))
 
     def disconnect(self):
-        from pynicotine.slskmessages import ServerDisconnect
         self.send_message_to_network_thread(ServerDisconnect())
 
     def reconnect(self):
-        from pynicotine.slskmessages import ServerReconnect
         self.send_message_to_network_thread(ServerReconnect())
 
-    def _server_reconnect(self, _msg: object):
+    def _server_reconnect(self, _msg: ServerReconnect):
         self.connect()
 
-    def send_message_to_network_thread(self, message: "InternalMessage"):
+    def send_message_to_network_thread(self, message: InternalMessage):
         """Sends message to the networking thread to inform about something."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_server(self, message: "InternalMessage"):
+    def send_message_to_server(self, message: ServerMessage):
         """Sends message to the server."""
         events.emit("queue-network-message", message)
 
-    def send_message_to_peer(self, username: str, message: "InternalMessage"):
+    def send_message_to_peer(self, username: str, message: PeerMessage):
         """Sends message to a peer."""
 
         message.username = username
@@ -291,14 +292,14 @@ class UpdateChecker:
     __slots__ = ("_thread",)
 
     def __init__(self):
-        self._thread: threading.Thread | None = None
+        self._thread: Thread | None = None
 
     def check(self):
 
         if self._thread is not None and self._thread.is_alive():
             return
 
-        self._thread = threading.Thread(target=self._check, name="UpdateChecker")
+        self._thread = Thread(target=self._check, name="UpdateChecker")
         self._thread.start()
 
     def _check(self):
