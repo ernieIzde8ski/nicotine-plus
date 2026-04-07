@@ -17,6 +17,7 @@ from collections import defaultdict
 from os import strerror
 from queue import Empty, SimpleQueue
 from threading import Thread
+from typing import NewType
 
 from pynicotine.events import events
 from pynicotine.logfacility import log
@@ -81,21 +82,34 @@ from pynicotine.slskmessages import initial_token
 from pynicotine.utils import human_duration_approx
 from pynicotine.utils import human_speed
 
+Time = NewType("Time", float)
+
+
+def monotonic_time() -> Time:
+    return time.monotonic()  # pyright: ignore[reportReturnType]
+
 
 class Connection:
-    __slots__ = ("sock", "addr", "io_events", "is_established", "in_buffer", "out_buffer",
-                 "last_active", "recv_size")
+    __slots__ = (
+        "sock",
+        "addr",
+        "io_events",
+        "is_established",
+        "in_buffer",
+        "out_buffer",
+        "last_active",
+        "recv_size",
+    )
 
-    def __init__(self, sock=None, addr=None, io_events=None):
-
-        self.sock = sock
-        self.addr = addr
-        self.io_events = io_events
-        self.in_buffer = bytearray()
-        self.out_buffer = bytearray()
-        self.last_active = time.monotonic()
-        self.recv_size = 51200
-        self.is_established = False
+    def __init__(self, sock: None = None, addr: None = None, io_events: None = None):
+        self.sock: None = sock
+        self.addr: None = addr
+        self.io_events: None = io_events
+        self.in_buffer: bytearray = bytearray()
+        self.out_buffer: bytearray = bytearray()
+        self.last_active: Time = monotonic_time()
+        self.recv_size: int = 51200
+        self.is_established: bool = False
 
 
 class ServerConnection(Connection):

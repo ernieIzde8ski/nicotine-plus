@@ -14,6 +14,7 @@ reportExplicitAny = false
 enableTypeIgnoreComments = true
 reportIgnoreCommentWithoutRule = false
 reportImplicitStringConcatenation = false
+reportUnnecessaryIsInstance = false
 
 [tool.ruff]
 target-version = "py310"
