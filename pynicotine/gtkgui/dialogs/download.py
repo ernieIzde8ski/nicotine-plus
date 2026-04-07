@@ -4,7 +4,12 @@
 import os
 
 from collections import deque
+from collections.abc import Callable
+from collections.abc import Iterable
 from operator import itemgetter
+from typing import Any
+from typing import TYPE_CHECKING
+from typing import TypeAlias
 
 from gi.repository import GLib
 from gi.repository import GObject
@@ -25,9 +30,17 @@ from pynicotine.gtkgui.widgets.treeview import TreeView
 from pynicotine.utils import human_size
 from pynicotine.utils import humanize
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+else:
+    Incomplete = Any
+
+Datum: TypeAlias = tuple[
+    Incomplete, str, float, Incomplete, bool, Incomplete
+]
+
 
 class Download(Dialog):
-
     def __init__(self, application):
 
         (
@@ -63,15 +76,15 @@ class Download(Dialog):
 
         self.download_callback = None
         self.file_properties = None
-        self.parent_iterators = {}
-        self.initial_selected_iterators = set()
-        self.folder_names = {}
-        self.pending_folders = {}
-        self.failed_usernames = set()
-        self.num_files = {}
-        self.num_selected_files = {}
-        self.indeterminate_progress = False
-        self.total_selected_size = 0
+        self.parent_iterators: dict[Incomplete, Incomplete] = {}
+        self.initial_selected_iterators: set[Incomplete] = set()
+        self.folder_names: dict[Incomplete, Incomplete] = {}
+        self.pending_folders: dict[Incomplete, Incomplete] = {}
+        self.failed_usernames: set[Incomplete] = set()
+        self.num_files: dict[Incomplete, Incomplete] = {}
+        self.num_selected_files: dict[Incomplete, dict[str, int]] = {}
+        self.indeterminate_progress: bool = False
+        self.total_selected_size: float = 0
 
         self.download_folder_button = FileChooserButton(
             self.download_folder_label.get_parent(), application=self.application,
@@ -176,8 +189,12 @@ class Download(Dialog):
 
         self.set_finished()
 
-    def update_files(self, data, partial_files=True, download_callback=None):
-
+    def update_files(
+        self,
+        data: Iterable[Datum],
+        partial_files: bool = True,
+        download_callback: Callable[[Incomplete], Incomplete] | None = None,
+    ):
         self.tree_view.freeze()
 
         self.rename_button.set_sensitive(False)
@@ -291,7 +308,7 @@ class Download(Dialog):
 
     def update_title(self):
 
-        num_selected_files = 0
+        num_selected_files: int = 0
 
         for folders in self.num_selected_files.values():
             for count in folders.values():

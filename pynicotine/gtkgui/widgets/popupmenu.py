@@ -427,7 +427,7 @@ class FilePopupMenu(PopupMenu):
             ("", None)
         )
 
-    def set_num_selected_files(self, num_files):
+    def set_num_selected_files(self, num_files: int) -> None:
 
         self.actions["selected_files"].set_enabled(False)
         self.update_item_label(

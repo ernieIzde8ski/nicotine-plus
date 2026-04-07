@@ -3376,7 +3376,7 @@ class PluginsPage:
         ) = self.widgets = ui.load(scope=self, path="settings/plugin.ui")
 
         self.application = application
-        self.selected_plugin = None
+        self.selected_plugin: str | None = None
         self.plugin_settings_dialog = None
 
         self.options = {
@@ -3576,7 +3576,6 @@ class PluginsPage:
         self.set_settings()
 
     def on_uninstall_plugin(self, *_args):
-
         if core.pluginhandler.is_internal_plugin(self.selected_plugin):
             return
 

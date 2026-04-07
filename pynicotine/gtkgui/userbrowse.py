@@ -17,7 +17,7 @@ from pynicotine.config import config
 from pynicotine.core import core
 from pynicotine.events import events
 from pynicotine.gtkgui.application import GTK_API_VERSION
-from pynicotine.gtkgui.dialogs.download import Download
+from pynicotine.gtkgui.dialogs.download import Datum, Download
 from pynicotine.gtkgui.dialogs.fileproperties import FileProperties
 from pynicotine.gtkgui.widgets import clipboard
 from pynicotine.gtkgui.widgets import ui
@@ -952,7 +952,7 @@ class UserBrowse:
 
     def on_download_folder_recursive(self, *_args):
 
-        data = []
+        data: list[Datum] = []
         prev_folder_path = None
         selected = True
 

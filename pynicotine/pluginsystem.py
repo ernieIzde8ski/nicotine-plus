@@ -10,9 +10,9 @@ import shutil
 import sys
 import time
 import zipfile
-
 from ast import literal_eval
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from pynicotine.config import config
 from pynicotine.core import core
@@ -20,12 +20,21 @@ from pynicotine.events import events
 from pynicotine.logfacility import log
 from pynicotine.utils import encode_path
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+else:
+    Incomplete = Any
+
 
 returncode = {
     "break": 0,  # don't give other plugins the event, do let n+ process it
     "zap": 1,    # don't give other plugins the event, don't let n+ process it
     "pass": 2    # do give other plugins the event, do let n+ process it
 }                # returning nothing is the same as 'pass'
+
+
+class PluginInfo(TypedDict, total=False):
+    Name: str
 
 
 class BasePlugin:
@@ -38,12 +47,23 @@ class BasePlugin:
     metasettings = {}
 
     # Attributes that are assigned when the plugin loads, do not modify these
-    internal_name = None  # Technical plugin name based on plugin folder name
-    human_name = None     # Friendly plugin name specified in the PLUGININFO file
-    path = None           # Folder path where plugin files are stored
-    parent = None         # Reference to PluginHandler
-    config = None         # Reference to global Config handler
-    core = None           # Reference to Core
+    internal_name = None
+    "Technical plugin name based on plugin folder name"
+
+    human_name: str | None = None
+    "Friendly plugin name specified in the PLUGININFO file"
+
+    path: str | None = None
+    "Folder path where plugin files are stored"
+
+    parent = None
+    "Reference to PluginHandler"
+
+    config = None
+    "Reference to global Config handler"
+
+    core = None
+    "Reference to Core"
 
     def __init__(self):
         # The plugin class is initializing, plugin settings are not available yet
@@ -471,9 +491,9 @@ class PluginHandler:
 
     def install_plugin(self, file_path):
 
-        plugin_name = None
-        max_uncompressed_size = 1024 * 1024 * 1024  # 1 GB
-        total_size = 0
+        plugin_name: str | None = None
+        max_uncompressed_size: int = 1024 * 1024 * 1024  # 1 GB
+        total_size: int = 0
 
         try:
             with zipfile.ZipFile(file_path, "r") as zip_file:
@@ -530,7 +550,7 @@ class PluginHandler:
 
         return plugin_name
 
-    def uninstall_plugin(self, plugin_name):
+    def uninstall_plugin(self, plugin_name: str):
 
         if self.is_internal_plugin(plugin_name):
             return False
@@ -585,7 +605,7 @@ class PluginHandler:
 
         return plugin_list
 
-    def get_plugin_path(self, plugin_name):
+    def get_plugin_path(self, plugin_name: str) -> str | None:
 
         for folder_path in self.plugin_folders:
             file_path = os.path.join(folder_path, plugin_name)
@@ -604,7 +624,7 @@ class PluginHandler:
 
         return plugin_path.startswith(self.internal_plugin_folder)
 
-    def _import_plugin_instance(self, plugin_name):
+    def _import_plugin_instance(self, plugin_name: str) -> Incomplete | None:
 
         if plugin_name == "now_playing_sender" and not self._load_now_playing_sender:
             # MPRIS is not available on Windows and macOS
@@ -839,9 +859,9 @@ class PluginHandler:
 
         return None
 
-    def get_plugin_info(self, plugin_name):
+    def get_plugin_info(self, plugin_name: str) -> PluginInfo:
 
-        plugin_info = {}
+        plugin_info: PluginInfo = {}
         plugin_path = self.get_plugin_path(plugin_name)
 
         if plugin_path is None:
@@ -858,7 +878,7 @@ class PluginHandler:
 
                     # Translatable string
                     if value.startswith("_(") and value.endswith(")"):
-                        plugin_info[key] = _(literal_eval(value[2:-1]))
+                        plugin_info[key] = _(cast(str, literal_eval(value[2:-1])))
                         continue
 
                     plugin_info[key] = literal_eval(value)
@@ -869,7 +889,7 @@ class PluginHandler:
         return plugin_info
 
     @staticmethod
-    def show_plugin_error(plugin_name, error):
+    def show_plugin_error(plugin_name: str, error: Exception):
 
         from traceback import format_tb
 

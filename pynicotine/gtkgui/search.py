@@ -11,6 +11,7 @@ import os
 import re
 
 from collections import deque
+from collections.abc import Iterable
 from itertools import islice
 
 from gi.repository import GLib
@@ -21,6 +22,7 @@ from pynicotine.config import config
 from pynicotine.core import core
 from pynicotine.events import events
 from pynicotine.gtkgui.application import GTK_API_VERSION
+from pynicotine.gtkgui.dialogs.download import Datum
 from pynicotine.gtkgui.dialogs.download import Download
 from pynicotine.gtkgui.dialogs.fileproperties import FileProperties
 from pynicotine.gtkgui.widgets import clipboard
@@ -1732,13 +1734,13 @@ class Search:
             )
         ).present()
 
-    def on_download_folders_result(self, files):
+    def on_download_folders_result(self, files: Iterable[Iterable[str]]):
 
         if not self.__dict__:
             # Tab was closed
             return
 
-        user_file_paths = set()
+        user_file_paths: set[str] = set()
 
         for username, file_path, *_unused in files:
             user_file_paths.add(username + file_path)
@@ -1760,7 +1762,7 @@ class Search:
 
     def on_download_folders(self, *_args):
 
-        data = []
+        data: list[Datum] = []
         user_folder_paths = set()
 
         for iterator in self.selected_results.values():

@@ -9,6 +9,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import os
+from typing import TYPE_CHECKING, Any
 
 from pynicotine.core import core
 from pynicotine.events import events
@@ -22,6 +23,11 @@ from pynicotine.utils import human_speed
 from pynicotine.utils import humanize
 from pynicotine.utils import open_file_path
 from pynicotine.utils import open_folder_path
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+else:
+    Incomplete = Any
 
 
 class Downloads(Transfers):
@@ -158,7 +164,14 @@ class Downloads(Transfers):
         if self.window.current_page_id != self.transfer_page.id:
             self.window.notebook.request_tab_changed(self.transfer_page, is_important=True)
 
-    def download_large_folder(self, username, folder, num_files, download_callback, callback_args):
+    def download_large_folder(
+        self,
+        username,
+        folder,
+        num_files: int,
+        download_callback: Incomplete,
+        callback_args: Incomplete,
+    ) -> None:
 
         OptionDialog(
             application=self.window.application,
