@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: 2020-2025 Nicotine+ Contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from dataclasses import dataclass
 from pynicotine.events import events
 
 
+@dataclass(slots=True)
 class Notifications:
-    __slots__ = ()
 
     def show_notification(self, message, title=None):
         events.emit("show-notification", message, title=title)
