@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: 2021-2025 Nicotine+ Contributors
+# SPDX-FileCopyrightText: 2021-2026 Nicotine+ Contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import glob
 import os
 import platform
-import ssl
 import subprocess
 import sys
 import tempfile
@@ -30,14 +29,14 @@ if sys.platform == "win32":
     SYS_BASE_PATH = sys.prefix
     LIB_PATH = os.path.join(SYS_BASE_PATH, "bin")
     UNAVAILABLE_MODULES = [
-        "fcntl", "grp", "nis", "ossaudiodev", "posix", "pwd", "readline", "resource", "spwd", "syslog", "termios"
+        "fcntl", "grp", "posix", "pwd", "readline", "resource", "syslog", "termios"
     ]
     ICON_NAME = "icon.ico"
 
 elif sys.platform == "darwin":
-    SYS_BASE_PATH = "/opt/homebrew" if platform.machine() == "arm64" else "/usr/local"
+    SYS_BASE_PATH = sys.prefix
     LIB_PATH = os.path.join(SYS_BASE_PATH, "lib")
-    UNAVAILABLE_MODULES = ["msvcrt", "nt", "nturl2path", "ossaudiodev", "spwd", "winreg", "winsound"]
+    UNAVAILABLE_MODULES = ["msvcrt", "nt", "nturl2path", "winreg", "winsound"]
     ICON_NAME = "icon.icns"
 
 else:
@@ -60,8 +59,8 @@ MANIFEST_NAME = os.path.join(CURRENT_PATH, f"{SCRIPT_NAME}.manifest") if sys.pla
 # Include (almost) all standard library modules for plugins
 EXCLUDED_MODULES = UNAVAILABLE_MODULES + [
     f"{MODULE_NAME}.plugins.examplars", f"{MODULE_NAME}.tests",
-    "ctypes.test", "distutils", "ensurepip", "idlelib", "lib2to3", "msilib", "pip", "pydoc", "pydoc_data",
-    "pygtkcompat", "tkinter", "turtle", "turtledemo", "unittest.test", "venv", "zoneinfo"
+    "ctypes.test", "ensurepip", "idlelib", "pip", "pydoc", "pydoc_data",
+    "tkinter", "turtle", "turtledemo", "unittest.test", "venv", "zoneinfo"
 ]
 INCLUDED_MODULES = [MODULE_NAME, "gi"] + list(
     # pylint: disable=no-member
@@ -112,10 +111,14 @@ def add_pixbuf_loaders() -> None:
 
     pixbuf_loaders_path = os.path.join(SYS_BASE_PATH, "lib/gdk-pixbuf-2.0/2.10.0/loaders")
     loader_extension = "dll" if sys.platform == "win32" else "so"
+    image_formats = ["bmp", "gif"]
+
+    if sys.platform == "win32":
+        image_formats += ["webp"]
 
     add_file(file_path=os.path.join(CURRENT_PATH, "pixbuf-loaders.cache"), output_path="lib/pixbuf-loaders.cache")
 
-    for image_format in ("bmp", "gif", "webp"):
+    for image_format in image_formats:
         basename = f"libpixbufloader-{image_format}"
         add_file(
             file_path=os.path.realpath(os.path.join(pixbuf_loaders_path, f"{basename}.{loader_extension}")),
@@ -142,8 +145,11 @@ def _add_typelibs_callback(full_path: str, short_path: str, _callback_data: None
             paths: list[str] = []
 
             for path in namespace.attrib["shared-library"].split(","):
-                updated_path = os.path.join("@loader_path", os.path.basename(path))
+                basename = os.path.basename(path)
+                updated_path = os.path.join("@loader_path", basename) if sys.platform == "darwin" else path
                 paths.append(updated_path)
+
+                add_file(file_path=os.path.join(LIB_PATH, basename), output_path=os.path.join("lib", basename))
 
             namespace.attrib["shared-library"] = ",".join(paths)
 
@@ -174,50 +180,35 @@ def add_typelibs() -> None:
     ]
 
     if sys.platform == "win32":
-        required_typelibs.append("GdkWin32-4")
-        required_typelibs.append("win32-")
+        required_typelibs += [
+            "GdkWin32-4",
+            "GioWin32-",
+            "GLibWin32-",
+            "win32-"
+        ]
+    else:
+        required_typelibs.append("GioUnix-")
 
     required_typelibs = tuple(required_typelibs)
-    folder_path = os.path.join(SYS_BASE_PATH, "lib/girepository-1.0")
 
-    if sys.platform == "darwin":
-        # Remove absolute paths added by Homebrew (macOS)
-        process_files(
-            folder_path=os.path.join(SYS_BASE_PATH, "share/gir-1.0"),
-            callback=_add_typelibs_callback, starts_with=required_typelibs, ends_with=".gir"
-        )
-        folder_path = TEMP_PATH
-
+    process_files(
+        folder_path=os.path.join(SYS_BASE_PATH, "share/gir-1.0"),
+        callback=_add_typelibs_callback, starts_with=required_typelibs, ends_with=".gir"
+    )
     add_files(
-        folder_path=folder_path, output_path="lib/typelibs",
+        folder_path=TEMP_PATH, output_path="lib/typelibs",
         starts_with=required_typelibs, ends_with=".typelib"
     )
 
 
 def add_gtk() -> None:
 
-    # Libraries
-    if sys.platform == "win32":
-        add_file(
-            file_path=os.path.join(LIB_PATH, "libgtk-4-1.dll"),
-            output_path="lib/libgtk-4-1.dll"
-        )
-        add_file(
-            file_path=os.path.join(LIB_PATH, "libadwaita-1-0.dll"),
-            output_path="lib/libadwaita-1-0.dll"
-        )
-        # gdbus required for single-instance application (Windows)
-        add_file(file_path=os.path.join(LIB_PATH, "gdbus.exe"), output_path="lib/gdbus.exe")
+    # Typelibs
+    add_typelibs()
 
-    elif sys.platform == "darwin":
-        add_file(
-            file_path=os.path.join(LIB_PATH, "libgtk-4.1.dylib"),
-            output_path="lib/libgtk-4.1.dylib"
-        )
-        add_file(
-            file_path=os.path.join(LIB_PATH, "libadwaita-1.0.dylib"),
-            output_path="lib/libadwaita-1.0.dylib"
-        )
+    # gdbus required for single-instance application (Windows)
+    if sys.platform == "win32":
+        add_file(file_path=os.path.join(LIB_PATH, "gdbus.exe"), output_path="lib/gdbus.exe")
 
     # Schemas
     add_file(
@@ -227,14 +218,6 @@ def add_gtk() -> None:
 
     # Pixbuf loaders
     add_pixbuf_loaders()
-
-    # Typelibs
-    add_typelibs()
-
-
-def add_ssl_certs() -> None:
-    ssl_paths = ssl.get_default_verify_paths()
-    add_file(file_path=ssl_paths.openssl_cafile, output_path="lib/cert.pem")
 
 
 def add_translations() -> None:
@@ -250,9 +233,6 @@ def add_translations() -> None:
 
 # GTK
 add_gtk()
-
-# SSL
-add_ssl_certs()
 
 # Translations
 add_translations()
@@ -322,6 +302,14 @@ setup(
             copyright=pynicotine.__copyright__,
             shortcut_name=pynicotine.__application_name__,
             shortcut_dir="ProgramMenuFolder"
+        ),
+        # Separate "console" executable required for CI startup test and debugging
+        Executable(
+            script=os.path.join(PROJECT_PATH, SCRIPT_NAME),
+            base="console",
+            target_name=f"{pynicotine.__application_name__}-debug",
+            manifest=MANIFEST_NAME,
+            copyright=pynicotine.__copyright__
         )
     ],
 )
