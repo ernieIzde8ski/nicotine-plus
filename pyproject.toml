@@ -4,3 +4,18 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+# TODO: remove pyright configuration before merging
+[tool.pyright]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+reportUnusedCallResult = false
+reportExplicitAny = false
+enableTypeIgnoreComments = true
+reportIgnoreCommentWithoutRule = false
+reportImplicitStringConcatenation = false
+reportUnnecessaryIsInstance = false
+
+[tool.ruff]
+target-version = "py310"
+builtins = ["_", "ngettext"]
