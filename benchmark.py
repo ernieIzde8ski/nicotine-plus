@@ -86,7 +86,7 @@ class BasicTransfer:
             self.file_attributes = FileAttributes()
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False)
 class DataclassTransfer:
     """This class holds information about a single transfer."""
 
@@ -94,9 +94,9 @@ class DataclassTransfer:
     virtual_path: str | None = None
     folder_path: str | None = None
     size: int = 0
+    file_attributes: FileAttributes | None = None
     status: str | None = None
     current_byte_offset: int | None = None
-    file_attributes: FileAttributes | None = None
 
     sock: socket | None = field(default=None, init=False)
     file_handle: BufferedRandom | None = field(default=None, init=False)
@@ -111,8 +111,7 @@ class DataclassTransfer:
     avg_speed: int = field(default=0, init=False)
     time_elapsed: float = field(default=0, init=False)
     time_left: int = field(default=0, init=False)
-    # Can be a "Gtk.TreeIterator". Not sure how the GTK side of things work though
-    iterator: int | None | Iterator[Incomplete] = field(default=None, init=False)
+    iterator: int | None = field(default=None, init=False)
     legacy_attempt: bool = field(default=False, init=False)
     retry_attempt: bool = field(default=False, init=False)
     size_changed: bool = field(default=False, init=False)
