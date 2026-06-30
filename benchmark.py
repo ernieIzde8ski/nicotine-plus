@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from io import BufferedRandom
@@ -95,7 +96,7 @@ class DataclassTransfer:
     size: int = 0
     status: str | None = None
     current_byte_offset: int | None = None
-    file_attributes: FileAttributes | None = field(default_factory=FileAttributes)
+    file_attributes: FileAttributes | None = None
 
     sock: socket | None = field(default=None, init=False)
     file_handle: BufferedRandom | None = field(default=None, init=False)
@@ -117,6 +118,10 @@ class DataclassTransfer:
     size_changed: bool = field(default=False, init=False)
     is_backslash_path: bool = field(default=False, init=False)
     is_lowercase_path: bool = field(default=False, init=False)
+
+    def __post_init__(self):
+        if self.file_attributes is None:
+            self.file_attributes = FileAttributes()
 
 
 globals = {
