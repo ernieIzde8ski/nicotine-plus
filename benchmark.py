@@ -85,7 +85,7 @@ class BasicTransfer:
             self.file_attributes = FileAttributes()
 
 
-@dataclass()
+@dataclass(slots=True)
 class DataclassTransfer:
     """This class holds information about a single transfer."""
 
@@ -129,7 +129,7 @@ globals = {
     "file_attributes": None,
 }
 
-ITERATIONS = 100_000_000
+ITERATIONS = 1_000_000_000
 OLD_CONSTRUCTOR = "BasicTransfer(" + ", ".join(globals.keys()) + ")"
 NEW_CONSTRUCTOR = "DataclassTransfer(" + ", ".join(globals.keys()) + ")"
 OLD_GLOBALS = {**globals, "BasicTransfer": BasicTransfer}
@@ -137,6 +137,8 @@ NEW_GLOBALS = {**globals, "DataclassTransfer": DataclassTransfer}
 
 old_time = timeit(OLD_CONSTRUCTOR, number=ITERATIONS, globals=OLD_GLOBALS)
 new_time = timeit(NEW_CONSTRUCTOR, number=ITERATIONS, globals=NEW_GLOBALS)
+
+print("Iterations:", ITERATIONS)
 
 print("Constructor duration:", f"{old_time=}", f"{new_time=}", sep="\n\t")
 
