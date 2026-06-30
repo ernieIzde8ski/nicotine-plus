@@ -9,6 +9,8 @@
 # SPDX-FileCopyrightText: 2001-2003 Alexander Kanavin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from collections.abc import Iterator
+import inspect
 import json
 import os
 import time
@@ -16,6 +18,8 @@ import time
 from ast import literal_eval
 from collections import defaultdict
 from os.path import normpath
+from typing import Any, override
+from more_itertools import peekable
 
 from pynicotine.config import config
 from pynicotine.core import core
@@ -28,6 +32,8 @@ from pynicotine.slskmessages import UploadDenied
 from pynicotine.utils import encode_path
 from pynicotine.utils import load_file
 from pynicotine.utils import write_file_and_backup
+
+Incomplete = Any
 
 
 class TransferStatus:
@@ -45,6 +51,9 @@ class TransferStatus:
     LOCAL_FILE_ERROR = "Local file error"
 
 
+SEEN_TYPES = defaultdict[str, set[type]](set)
+
+
 class Transfer:
     """This class holds information about a single transfer."""
 
@@ -56,9 +65,33 @@ class Transfer:
                  "legacy_attempt", "retry_attempt", "size_changed", "is_backslash_path",
                  "is_lowercase_path", "request_timer_id")
 
-    def __init__(self, username, virtual_path=None, folder_path=None, size=0, file_attributes=None,
-                 status=None, current_byte_offset=None):
-        self.username = username
+    @override
+    def __setattr__(self, name: str, value: Any, /) -> None:
+        ESC = "\x1b["
+        R = f"{ESC}31m"
+        G = f"{ESC}32m"
+        Y = f"{ESC}33m"
+        C = f"{ESC}36m"
+        NM = f"{ESC}0m"
+        t = type(value)
+        if t not in SEEN_TYPES[name]:
+            print(
+                f"{Y}{name}{NM}: {C}{type(value).__name__}{NM} {G}={NM} {R}{value}{NM}"
+            )
+            if isinstance(value, Iterator):
+                value = peekable(value)
+                print("    ", end="")
+                try:
+                    print("Iterator over:", type(next(value)).__name__)
+                except StopIteration:
+                    print("Iterator iterates over unknown values")
+            SEEN_TYPES[name].add(t)
+        return super().__setattr__(name, value)
+
+    def __init__(self, username: str, virtual_path: Incomplete | None = None,
+                 folder_path: str | None = None, size: int = 0, file_attributes: Incomplete | None = None,
+                 status: Incomplete | None = None, current_byte_offset: Incomplete | None = None):
+        self.username: str = username
         self.virtual_path = virtual_path
         self.folder_path = folder_path
         self.size = size
@@ -98,13 +131,14 @@ class Transfers:
 
     def __init__(self, name):
 
-        self.transfers = {}
-        self.queued_transfers = {}
-        self.queued_users = defaultdict(dict)
-        self.active_users = defaultdict(dict)
-        self.failed_users = defaultdict(dict)
-        self.transfers_file_path = os.path.join(config.data_folder_path, f"{name}.json")
-        self.total_bandwidth = 0
+        QueueKey = Incomplete
+        self.transfers: dict[QueueKey, Incomplete] = {}
+        self.queued_transfers: dict[QueueKey, Incomplete] = {}
+        self.queued_users: defaultdict[Transfer, Incomplete] = defaultdict(dict)
+        self.active_users: defaultdict[Incomplete, Incomplete] = defaultdict(dict)
+        self.failed_users: defaultdict[Incomplete, Incomplete] = defaultdict(dict)
+        self.transfers_file_path: str = os.path.join(config.data_folder_path, f"{name}.json")
+        self.total_bandwidth: int = 0
 
         self._name = name
         self._allow_saving_transfers = False

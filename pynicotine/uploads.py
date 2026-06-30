@@ -54,9 +54,9 @@ class Uploads(Transfers):
 
         super().__init__(name="uploads")
 
-        self.pending_shutdown = False
-        self.upload_speed = 0
-        self.token = initial_token()
+        self.pending_shutdown: bool = False
+        self.upload_speed: int = 0
+        self.token: int = initial_token()
 
         self._queue_positions = {}
         self._queue_position_users = defaultdict(dict)
@@ -495,7 +495,7 @@ class Uploads(Transfers):
 
         return is_shared, real_path, size
 
-    def _get_upload_candidate(self):
+    def _get_upload_candidate(self) -> tuple[Transfer | None, bool]:
         """Retrieve a suitable queued transfer for uploading.
 
         Round Robin: Get the first queued item from the oldest user
